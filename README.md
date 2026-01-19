@@ -1,52 +1,162 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# SentinelOps - Production-Grade SaaS Monitoring Platform
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A scalable, enterprise-ready monitoring platform built with Laravel 11 and PHP 8.3.
 
-## About Laravel
+## Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Multi-tenant SaaS Architecture**: Organizations, users, and role-based access
+- **HTTP Monitoring**: Periodic checks with configurable intervals and thresholds
+- **Incident Management**: Automated incident creation and lifecycle management
+- **Alerting System**: Pluggable notification channels (Email, Webhooks, Slack)
+- **Public Status Page**: Real-time status with caching
+- **Security First**: Token-based API auth, rate limiting, encrypted secrets
+- **Performance Optimized**: Redis queues, Horizon, database indexing
+- **Docker Ready**: Complete containerization setup
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Requirements
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- PHP 8.3+
+- PostgreSQL or SQLite
+- Redis
+- Composer
+- Node.js & NPM (for assets)
 
-## Learning Laravel
+## Installation
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/your-org/sentinelops.git
+   cd sentinelops
+   ```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+2. **Install dependencies**
+   ```bash
+   composer install
+   npm install
+   ```
 
-## Laravel Sponsors
+3. **Environment setup**
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+4. **Database setup**
+   ```bash
+   php artisan migrate
+   php artisan db:seed
+   ```
 
-### Premium Partners
+5. **Build assets**
+   ```bash
+   npm run build
+   ```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## Docker Setup
+
+```bash
+docker-compose up -d
+```
+
+## Usage
+
+### API Authentication
+
+Use Sanctum for API authentication:
+
+```bash
+# Login
+curl -X POST http://localhost:8000/api/login \
+  -d '{"email":"admin@acme.com","password":"password"}'
+
+# Use token for authenticated requests
+curl -H "Authorization: Bearer {token}" http://localhost:8000/api/monitors
+```
+
+### Monitoring Engine
+
+- Monitors are checked via queued jobs
+- Run checks manually: `php artisan monitors:check`
+- Scheduled every minute via Laravel scheduler
+
+### Horizon Dashboard
+
+Access at `/horizon` for queue monitoring.
+
+## Architecture
+
+### Database Schema
+
+- **Organizations**: Multi-tenant isolation
+- **Users**: Role-based access (admin/user)
+- **Monitors**: HTTP endpoints to monitor
+- **Checks**: Individual check results
+- **Incidents**: Failure incidents with timeline
+- **Alert Channels**: Notification configurations
+- **Notifications**: Sent alert records
+- **Audit Logs**: Security audit trail
+
+### Key Components
+
+- **Jobs**: `CheckMonitorJob` for HTTP checks
+- **Services**: `IncidentService` for alert management
+- **Policies**: Authorization for multi-tenant access
+- **Middleware**: Rate limiting and security
+
+## Security
+
+- Encrypted alert channel configurations
+- Full audit logging
+- Rate limiting on API endpoints
+- Soft deletes for data recovery
+- UUIDs for public resources
+
+## Scaling
+
+- Horizontal scaling with Redis queues
+- Database indexing on critical queries
+- Cached status pages
+- Background job processing
+
+## Testing
+
+```bash
+php artisan test
+```
+
+## Deployment
+
+### Production Checklist
+
+- [ ] Set `APP_ENV=production`
+- [ ] Configure Redis and PostgreSQL
+- [ ] Set up SSL certificates
+- [ ] Configure supervisor for queue workers
+- [ ] Set up monitoring (Laravel Telescope/Pulse)
+- [ ] Enable OPcache and JIT
+
+### Supervisor Configuration
+
+```ini
+[program:laravel-worker]
+process_name=%(program_name)s_%(process_num)02d
+command=php /path/to/artisan queue:work --sleep=3 --tries=3
+directory=/path/to/project
+autostart=true
+autorestart=true
+numprocs=2
+```
 
 ## Contributing
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+1. Fork the repository
+2. Create feature branch
+3. Add tests
+4. Submit PR
 
-## Code of Conduct
+## License
+
+MIT License
 
 In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
 
