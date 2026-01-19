@@ -11,15 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('organizations', function (Blueprint $table) {
+        Schema::create('alert_channels', function (Blueprint $table) {
             $table->uuid('id')->primary();
+            $table->uuid('organization_id');
+            $table->foreign('organization_id')->references('id')->on('organizations')->onDelete('cascade');
+            $table->enum('type', ['email', 'webhook', 'slack']);
             $table->string('name');
-            $table->string('slug')->unique();
-            $table->string('email')->nullable();
-            $table->string('phone')->nullable();
-            $table->text('address')->nullable();
+            $table->json('config'); // encrypted
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
             $table->softDeletes();
+
+            $table->index(['organization_id', 'type']);
         });
     }
 
@@ -28,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('organizations');
+        Schema::dropIfExists('alert_channels');
     }
 };
